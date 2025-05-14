@@ -70,28 +70,34 @@ const AuthForm = ({ type }: { type: FormType }) => {
         const { email, password } = data;
 
         const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
+            auth,
+            email,
+            password
         );
 
         const idToken = await userCredential.user.getIdToken();
-        if (!idToken) {
-          toast.error("Sign in Failed. Please try again.");
-          return;
-        }
+        await signIn({ email, idToken });
 
-        await signIn({
-          email,
-          idToken,
-        });
-
-        toast.success("Signed in successfully.");
+        toast.success("Signed in successfully");
         router.push("/");
       }
-    } catch (error) {
-      console.log(error);
-      toast.error(`There was an error: ${error}`);
+    } catch (error: any) {
+      console.error(error);
+
+      // Handle specific Firebase errors
+      switch (error.code) {
+        case "auth/wrong-password":
+          toast.error("Incorrect password. Please try again.");
+          break;
+        case "auth/user-not-found":
+          toast.error("No account found with this email.");
+          break;
+        case "auth/too-many-requests":
+          toast.error("Too many attempts. Account temporarily locked.");
+          break;
+        default:
+          toast.error("Sign-in failed. Please try again.");
+      }
     }
   };
 
@@ -102,10 +108,12 @@ const AuthForm = ({ type }: { type: FormType }) => {
       <div className="flex flex-col gap-6 card py-14 px-10">
         <div className="flex flex-row gap-2 justify-center">
           <Image src="/logo.svg" alt="logo" height={32} width={38} />
-          <h2 className="text-primary-100">PrepWise</h2>
+          <h2 className="text-primary-100">PrepLens</h2>
         </div>
 
-        <h3>Practice job interviews with AI</h3>
+        <div className="flex justify-center"> {/* New wrapper div */}
+          <h3 className="text-center">AI-Powered Interview Mastery</h3>
+        </div>
 
         <Form {...form}>
           <form
