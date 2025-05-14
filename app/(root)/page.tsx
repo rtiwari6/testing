@@ -25,13 +25,13 @@ async function Home() {
     <>
       <section className="card-cta">
         <div className="flex flex-col gap-6 max-w-lg">
-          <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>
+          <h2>Ace Every Interview with AI-Powered Mock Practice</h2>
           <p className="text-lg">
-            Practice real interview questions & get instant feedback
+            Simulate real interviews with AI and uncover blind spots before the big day
           </p>
 
           <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start an Interview</Link>
+            <Link href="/interview">Design Your Interview</Link>
           </Button>
         </div>
 
@@ -61,7 +61,7 @@ async function Home() {
               />
             ))
           ) : (
-            <p>You haven&apos;t taken any interviews yet</p>
+            <p>No sessions yet. Design an interview to begin your improvement journey</p>
           )}
         </div>
       </section>
@@ -83,7 +83,7 @@ async function Home() {
               />
             ))
           ) : (
-            <p>There are no interviews available</p>
+            <p>Community mock interviews will appear here once published</p>
           )}
         </div>
       </section>
