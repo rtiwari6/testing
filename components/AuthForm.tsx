@@ -4,14 +4,14 @@ import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { auth } from "@/firebase/client";
+import { provider, auth } from "@/firebase/client";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from "firebase/auth";
 
 import { Form } from "@/components/ui/form";
@@ -34,57 +34,36 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const formSchema = authFormSchema(type);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (type === "sign-up") {
         const { name, email, password } = data;
-
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
         const result = await signUp({
-          uid: userCredential.user.uid,
+          uid: userCred.user.uid,
           name: name!,
           email,
           password,
         });
-
         if (!result.success) {
           toast.error(result.message);
           return;
         }
-
         toast.success("Account created successfully. Please sign in.");
         router.push("/sign-in");
       } else {
         const { email, password } = data;
-
-        const userCredential = await signInWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
-        const idToken = await userCredential.user.getIdToken();
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await userCred.user.getIdToken();
         await signIn({ email, idToken });
-
         toast.success("Signed in successfully");
         router.push("/");
       }
     } catch (error: any) {
       console.error(error);
-
-      // Handle specific Firebase errors
       switch (error.code) {
         case "auth/wrong-password":
           toast.error("Incorrect password. Please try again.");
@@ -101,68 +80,98 @@ const AuthForm = ({ type }: { type: FormType }) => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const idToken = await user.getIdToken();
+      await signIn({ email: user.email!, idToken });
+      toast.success("Signed in with Google");
+      router.push("/");
+    } catch (error) {
+      console.error(error);
+      toast.error("Google sign-in failed");
+    }
+  };
+
   const isSignIn = type === "sign-in";
 
   return (
-    <div className="card-border lg:min-w-[566px]">
-      <div className="flex flex-col gap-6 card py-14 px-10">
-        <div className="flex flex-row gap-2 justify-center">
-          <Image src="/logo.svg" alt="logo" height={40} width={40} />
-          <h2 className="text-primary-100">MOCKLY</h2>
-        </div>
-
-        <div className="flex justify-center"> {/* New wrapper div */}
+      <div className="card-border lg:min-w-[566px]">
+        <div className="flex flex-col gap-6 card py-14 px-10">
+          {/* Logo & Title */}
+          <div className="flex gap-2 justify-center items-center">
+            <Image src="/logo.svg" alt="logo" width={40} height={40} />
+            <h2 className="text-primary-100">MOCKLY</h2>
+          </div>
           <h3 className="text-center">AI-Powered Interview Mastery</h3>
-        </div>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-6 mt-4 form"
-          >
-            {!isSignIn && (
+          {/* Email/Password Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 form">
+              {!isSignIn && (
+                  <FormField
+                      control={form.control}
+                      name="name"
+                      label="Name"
+                      placeholder="Your name"
+                      type="text"
+                  />
+              )}
               <FormField
-                control={form.control}
-                name="name"
-                label="Name"
-                placeholder="Your Name"
-                type="text"
+                  control={form.control}
+                  name="email"
+                  label="Email"
+                  placeholder="Email Address"
+                  type="email"
               />
-            )}
+              <FormField
+                  control={form.control}
+                  name="password"
+                  label="Password"
+                  placeholder="Password"
+                  type="password"
+              />
+              <Button className="btn w-full" type="submit">
+                {isSignIn ? "Sign In" : "Create Account"}
+              </Button>
+            </form>
+          </Form>
 
-            <FormField
-              control={form.control}
-              name="email"
-              label="Email"
-              placeholder="Your email address"
-              type="email"
-            />
+          {/* Divider with “OR” */}
+          <div className="flex items-center my-4">
+            <hr className="flex-grow border-input/50" />
+            <span className="mx-2 text-light-100">OR</span>
+            <hr className="flex-grow border-input/50" />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="password"
-              label="Password"
-              placeholder="Enter your password"
-              type="password"
-            />
-
-            <Button className="btn" type="submit">
-              {isSignIn ? "Sign In" : "Create an Account"}
-            </Button>
-          </form>
-        </Form>
-
-        <p className="text-center">
-          {isSignIn ? "No account yet?" : "Have an account already?"}
-          <Link
-            href={!isSignIn ? "/sign-in" : "/sign-up"}
-            className="font-bold text-user-primary ml-1"
+          {/* Google Sign-In */}
+          <Button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="btn-secondary w-full flex items-center justify-center gap-2"
           >
-            {!isSignIn ? "Sign In" : "Sign Up"}
-          </Link>
-        </p>
+            {/* Using public CDN for the “G” logo */}
+            <img
+                src="/google.svg"
+                alt="Google logo"
+                className="w-5 h-5"
+            />
+            Continue with Google
+          </Button>
+
+          {/* Switch to Sign Up / Sign In Link */}
+          <p className="text-center mt-4">
+            {isSignIn ? "No account yet?" : "Have an account already?"}{" "}
+            <Link
+                href={isSignIn ? "/sign-up" : "/sign-in"}
+                className="font-bold text-user-primary"
+            >
+              {isSignIn ? "Sign Up" : "Sign In"}
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
   );
 };
 

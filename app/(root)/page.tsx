@@ -33,9 +33,10 @@ async function Home() {
 
           </p>
 
-          <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Design Your Interview</Link>
+          <Button asChild className="btn-primary max-sm:w-full h-12 text-base px-10">
+            <Link href="/interview">Start Personalizing Your Interview</Link>
           </Button>
+
         </div>
 
         <Image

@@ -3,8 +3,7 @@ import Image from "next/image";
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
-import { isAuthenticated } from "@/lib/actions/auth.action";
-import { signOut } from "@/lib/actions/auth.action";
+import { isAuthenticated, signOut } from "@/lib/actions/auth.action";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -18,22 +17,12 @@ const Layout = async ({ children }: { children: ReactNode }) => {
             <h2 className="text-primary-100">MOCKLY</h2>
           </Link>
 
-          {/* ✅ Buttons Container */}
-          <div className="flex gap-4">
-            {/* Back to Home Button */}
-            <Link href="/">
-              <button type="button" className="btn-secondary">
-                Back
-              </button>
-            </Link>
-
-            {/* Sign Out Button */}
-            <form action={signOut}>
-              <button type="submit" className="btn-secondary">
-                Sign Out
-              </button>
-            </form>
-          </div>
+          {/* ✅ Only Sign Out Button */}
+          <form action={signOut}>
+            <button type="submit" className="btn-secondary">
+              Sign Out
+            </button>
+          </form>
         </nav>
 
         {children}
