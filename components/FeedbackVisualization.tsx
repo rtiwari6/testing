@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { Radar } from 'react-chartjs-2'
+import confetti from 'canvas-confetti'
 import {
     Chart,
     RadialLinearScale,
@@ -38,6 +39,13 @@ export default function FeedbackVisualization({ feedback }: { feedback: Feedback
         }, 30)
         return () => clearInterval(interval)
     }, [activeTab, feedback])
+
+    useEffect(() => {
+        if (!hasCelebratedRef.current && feedback.categoryScores.some(c => c.score >= 50)) {
+            hasCelebratedRef.current = true
+            confetti({ particleCount: 150, spread: 200, origin: { y: 0.6 }, zIndex: 9999 })
+        }
+    }, [feedback])
 
     // Enhanced hover animation for radar chart
     useEffect(() => {
