@@ -29,6 +29,7 @@ export default function FeedbackVisualization({ feedback }: { feedback: Feedback
     const [activeTab, setActiveTab] = useState(0)
     const [progress, setProgress] = useState(0)
     const radarRef = useRef(null)
+    const hasCelebratedRef = useRef(false)
 
     // Animation for progress bar
     useEffect(() => {
