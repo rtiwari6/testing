@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isEmbedded } from "@/lib/utils";
+import OpenInBrowserModal from "@/components/OpenInBrowserModal";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -31,6 +32,7 @@ const authFormSchema = (type: FormType) => {
 
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
+  const inApp = typeof window !== 'undefined' && isEmbedded();
 
   const formSchema = authFormSchema(type);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -111,82 +113,82 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const isSignIn = type === "sign-in";
 
   return (
-      <div className="card-border lg:min-w-[566px]">
-        <div className="flex flex-col gap-6 card py-14 px-10">
-          {/* Logo & Title */}
-          <div className="flex gap-2 justify-center items-center">
-            <Image src="/logo.svg" alt="logo" width={40} height={40} />
-            <h2 className="text-primary-100">MOCKLY</h2>
-          </div>
-          <h3 className="text-center">AI-Powered Interview Mastery</h3>
+  <>
+    {inApp && <OpenInBrowserModal />}
 
-          {/* Email/Password Form */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 form">
-              {!isSignIn && (
-                  <FormField
-                      control={form.control}
-                      name="name"
-                      label="Name"
-                      placeholder="Your name"
-                      type="text"
-                  />
-              )}
-              <FormField
-                  control={form.control}
-                  name="email"
-                  label="Email"
-                  placeholder="Email Address"
-                  type="email"
-              />
-              <FormField
-                  control={form.control}
-                  name="password"
-                  label="Password"
-                  placeholder="Password"
-                  type="password"
-              />
-              <Button className="btn w-full" type="submit">
-                {isSignIn ? "Sign In" : "Create Account"}
-              </Button>
-            </form>
-          </Form>
-
-          {/* Divider with “OR” */}
-          <div className="flex items-center my-4">
-            <hr className="flex-grow border-input/50" />
-            <span className="mx-2 text-light-100">OR</span>
-            <hr className="flex-grow border-input/50" />
-          </div>
-
-          {/* Google Sign-In */}
-          <Button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="btn-secondary w-full flex items-center justify-center gap-2"
-          >
-            
-            <img
-                src="/google.svg"
-                alt="Google logo"
-                className="w-5 h-5"
-            />
-            Continue with Google
-          </Button>
-
-          {/* Switch to Sign Up / Sign In Link */}
-          <p className="text-center mt-4">
-            {isSignIn ? "No account yet?" : "Have an account already?"}{" "}
-            <Link
-                href={isSignIn ? "/sign-up" : "/sign-in"}
-                className="font-bold text-user-primary"
-            >
-              {isSignIn ? "Sign Up" : "Sign In"}
-            </Link>
-          </p>
+    <div className="card-border lg:min-w-[566px]">
+      <div className="flex flex-col gap-6 card py-14 px-10">
+        {/* Logo & Title */}
+        <div className="flex gap-2 justify-center items-center">
+          <Image src="/logo.svg" alt="logo" width={40} height={40} />
+          <h2 className="text-primary-100">MOCKLY</h2>
         </div>
+        <h3 className="text-center">AI-Powered Interview Mastery</h3>
+
+        {/* Email/Password Form */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 form">
+            {!isSignIn && (
+              <FormField
+                control={form.control}
+                name="name"
+                label="Name"
+                placeholder="Your name"
+                type="text"
+              />
+            )}
+            <FormField
+              control={form.control}
+              name="email"
+              label="Email"
+              placeholder="Email Address"
+              type="email"
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              label="Password"
+              placeholder="Password"
+              type="password"
+            />
+            <Button className="btn w-full" type="submit">
+              {isSignIn ? "Sign In" : "Create Account"}
+            </Button>
+          </form>
+        </Form>
+
+        {/* Divider with “OR” */}
+        <div className="flex items-center my-4">
+          <hr className="flex-grow border-input/50" />
+          <span className="mx-2 text-light-100">OR</span>
+          <hr className="flex-grow border-input/50" />
+        </div>
+
+        {/* Google Sign-In */}
+        <Button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="btn-secondary w-full flex items-center justify-center gap-2"
+        >
+          <img src="/google.svg" alt="Google logo" className="w-5 h-5" />
+          Continue with Google
+        </Button>
+
+        {/* Switch to Sign Up / Sign In Link */}
+        <p className="text-center mt-4">
+          {isSignIn ? "No account yet?" : "Have an account already?"}{" "}
+          <Link
+            href={isSignIn ? "/sign-up" : "/sign-in"}
+            className="font-bold text-user-primary"
+          >
+            {isSignIn ? "Sign Up" : "Sign In"}
+          </Link>
+        </p>
       </div>
-  );
+    </div>
+  </>
+);
+
 };
 
 export default AuthForm;
