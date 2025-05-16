@@ -107,14 +107,14 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
 
 /**
  * Builds a deep-link that tries to open the page
- * in the user’s real browser instead of the in-app web-view.
+ * in the user's real browser instead of the in-app web-view.
  */
 export const getExternalBrowserUrl = (): string => {
   if (typeof window === "undefined") {
     return "https://testing-psi-virid.vercel.app/";    // SSR fallback
   }
 
-  const { href, protocol } = window.location;          // full current URL
+  const { href, protocol, host, pathname, search, hash } = window.location;
   const platform = getMobilePlatform();
 
   if (platform === "ios") {
@@ -124,13 +124,8 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Extract the domain and path separately to ensure proper handling
-    const url = new URL(href);
-    const domain = url.hostname;
-    const pathWithQuery = url.pathname + url.search + url.hash;
-
-    // Construct intent URL with S.browser_fallback_url parameter
-    return `intent://${domain}${pathWithQuery}#Intent;scheme=${protocol.replace(":", "")};S.browser_fallback_url=${encodeURIComponent(href)};end`;
+    // Use intent URL for Android - this is the most reliable way to open Chrome
+    return `intent://${host}${pathname}${search}${hash}#Intent;scheme=https;package=com.android.chrome;end`;
   }
 
   // Desktop or anything else
