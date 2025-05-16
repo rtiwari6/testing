@@ -32,10 +32,10 @@ export const getTechLogos = async (techArray: string[]) => {
   });
 
   const results = await Promise.all(
-    logoURLs.map(async ({ tech, url }) => ({
-      tech,
-      url: (await checkIconExists(url)) ? url : "/tech.svg",
-    }))
+      logoURLs.map(async ({ tech, url }) => ({
+        tech,
+        url: (await checkIconExists(url)) ? url : "/tech.svg",
+      }))
   );
 
   return results;
@@ -52,9 +52,9 @@ export const getRandomInterviewCover = () => {
 export const isEmbedded = (): boolean => {
   // Return false if running on server
   if (typeof window === 'undefined') return false;
-  
+
   const ua = navigator.userAgent || '';
-  
+
   // Patterns for common in-app browsers and webviews
   const patterns = [
     // Social media apps
@@ -64,27 +64,27 @@ export const isEmbedded = (): boolean => {
     /LinkedIn(App)?/i,              // LinkedIn
     /\bPinterest\b/i,               // Pinterest
     /TikTok/i,                      // TikTok
-    
+
     // Messaging apps
     /\bLine\b/i,                    // Line
     /\bFBMessenger\b|MESSENGER/i,   // Facebook Messenger
     /\bWhatsApp\b/i,                // WhatsApp
     /\bTelegram\b/i,                // Telegram
-    
+
     // Mail apps
     /\bGmail\b/i,                   // Gmail
-    
+
     // Generic webview indicators
     /\bwv\b|WebView/i,              // Generic WebView
     /Android.*(wv|.0.0.0)/,         // Android WebView
-    
+
     // iOS in-app browser indicators
     /^Mozilla.*Darwin.*iPhone.*AppleWebKit(?!.*Safari)/i,
-    
+
     // Additional patterns
     /GSA\/|Google\/|__GSA__/i,      // Google app
   ];
-  
+
   return patterns.some(pattern => pattern.test(ua));
 };
 
@@ -93,44 +93,26 @@ export const isEmbedded = (): boolean => {
  */
 export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
   if (typeof window === 'undefined') return 'other';
-  
+
   const ua = navigator.userAgent || '';
-  
+
   if (/iPhone|iPad|iPod/i.test(ua)) {
     return 'ios';
   } else if (/Android/i.test(ua)) {
     return 'android';
   }
-  
+
   return 'other';
 };
 
 /**
  * Constructs a URL for opening the app in a browser
+ * This function is no longer needed as we handle the browser opening directly
+ * in the BrowserRedirectModal component
  */
 export const getExternalBrowserUrl = (): string => {
   if (typeof window === 'undefined') return 'https://testing-psi-virid.vercel.app/'; // SSR fallback
 
   const { origin, pathname, search, hash } = window.location;
-  const currentUrl = `${origin}${pathname}${search}${hash}`;
-
-  // Get the platform
-  const platform = getMobilePlatform();
-
-  if (platform === 'ios') {
-    // iOS-specific universal links that force safari to open
-    // Try multiple approaches for iOS
-
-    // Option 1: Use x-web-search protocol handler (works on many iOS versions)
-    return `x-web-search://?${encodeURIComponent(currentUrl)}`;
-
-    // If that doesn't work, we'll try Option 2 in BrowserRedirectModal
-  } else if (platform === 'android') {
-    // For Android, we construct an intent URL
-    // This format tries to force Chrome or default browser to open
-    return `intent:${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  } else {
-    // Default fallback
-    return currentUrl;
-  }
+  return `${origin}${pathname}${search}${hash}`;
 };
