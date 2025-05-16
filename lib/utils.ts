@@ -126,8 +126,17 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Deep-link that lets the user pick a real browser
-    return `intent:${href}#Intent;scheme=${protocol.replace(":", "")};end`;
+    // Strip protocol so we can insert our own after intent://
+    const urlWithoutScheme = href.replace(/^https?:\/\//, "");
+
+    return (
+        `intent://${urlWithoutScheme}` +
+        `#Intent;scheme=${window.location.protocol.slice(0, -1)}` + // http / https
+        `;action=android.intent.action.VIEW` +
+        `;category=android.intent.category.BROWSABLE` +
+        `;S.browser_fallback_url=${encodeURIComponent(origin)}` +
+        `;end`
+    );
   }
 
   // Desktop or anything else
