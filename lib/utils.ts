@@ -124,13 +124,8 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Extract the domain and path separately to ensure proper handling
-    const url = new URL(href);
-    const domain = url.hostname;
-    const pathWithQuery = url.pathname + url.search + url.hash;
-
-    // Try Chrome first, then fallback to system browser
-    return `intent://${domain}${pathWithQuery}#Intent;scheme=${protocol.replace(":", "")};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(href)};end`;
+    // For Android, we'll use a simpler approach that works more reliably
+    return `market://details?id=com.android.chrome&url=${encodeURIComponent(href)}`;
   }
 
   // Desktop or anything else

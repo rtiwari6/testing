@@ -51,15 +51,16 @@ const BrowserRedirectModal = ({
         }, 300);
       }, 300);
     } else if (platform === "android") {
-      // Try to open in Chrome first
-      window.location.href = externalUrl;
+      // For Android, we'll try multiple approaches in sequence
       
-      // Fallback to system browser after a short delay
+      // 1. Try to open in Chrome directly
+      window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+      
+      // 2. If Chrome isn't installed, try the market URL
       setTimeout(() => {
-        // Try to open in Chrome directly
-        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+        window.location.href = externalUrl;
         
-        // Final fallback to system browser
+        // 3. Final fallback - open in system browser
         setTimeout(() => {
           window.open(currentUrl, "_system");
         }, 300);
