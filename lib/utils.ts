@@ -106,31 +106,30 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
 };
 
 /**
- * Constructs a URL for opening the app in a browser
+ * Builds a deep-link that tries to open the page
+ * in the user’s real browser instead of the in-app web-view.
  */
 export const getExternalBrowserUrl = (): string => {
-  if (typeof window === 'undefined') return 'https://testing-psi-virid.vercel.app/'; // SSR fallback
+  if (typeof window === "undefined") {
+    return "https://testing-psi-virid.vercel.app/";    // SSR fallback
+  }
 
-  const { origin, pathname, search, hash } = window.location;
-  const currentUrl = `${origin}${pathname}${search}${hash}`;
-
-  // Get the platform
+  const { href, protocol } = window.location;          // full current URL
   const platform = getMobilePlatform();
 
-  if (platform === 'ios') {
-    // iOS-specific universal links that force safari to open
-    // Try multiple approaches for iOS
-
-    // Option 1: Use x-web-search protocol handler (works on many iOS versions)
-    return `x-web-search://?${encodeURIComponent(currentUrl)}`;
-
-    // If that doesn't work, we'll try Option 2 in BrowserRedirectModal
-  } else if (platform === 'android') {
-    // For Android, we construct an intent URL
-    // This format tries to force Chrome or default browser to open
-    return `intent:${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  } else {
-    // Default fallback
-    return currentUrl;
+  if (platform === "ios") {
+    /* iOS 17 +:  x-safari-https://example.com
+       iOS < 17:  falls back to next attempt in handleOpenInBrowser()       */
+    const scheme =
+        protocol === "https:" ? "x-safari-https://" : "x-safari-http://";
+    return href.replace(/^https?:\/\//, scheme);
   }
+
+  if (platform === "android") {
+    // Deep-link that lets the user pick a real browser
+    return `intent:${href}#Intent;scheme=${protocol.replace(":", "")};end`;
+  }
+
+  // Desktop or anything else
+  return href;
 };

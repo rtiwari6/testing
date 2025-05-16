@@ -32,40 +32,31 @@ const BrowserRedirectModal = ({
   if (!isMounted) return null;
 
   const handleOpenInBrowser = () => {
-    const externalUrl = getExternalBrowserUrl();
+    const externalUrl = getExternalBrowserUrl();   // now x-safari-https://…
     const { origin, pathname, search, hash } = window.location;
     const currentUrl = `${origin}${pathname}${search}${hash}`;
 
-    if (platform === 'ios') {
-      // Try multiple approaches for iOS
-      // First attempt with x-web-search protocol (which should be in the URL from getExternalBrowserUrl)
+    if (platform === "ios") {
+      // 1️⃣  Try the x-safari- scheme (no Google search!)
       window.location.href = externalUrl;
 
-      // Set a timeout to try alternative methods if the first doesn't work
+      // 2️⃣  Fallback – open in Chrome if installed
       setTimeout(() => {
-        // Second attempt with a different protocol
-        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+        window.location.href =
+            `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
 
-        // Third attempt with yet another approach
+        // 3️⃣  Final fallback – let the system decide
         setTimeout(() => {
-          // Try direct approach as last resort
-          window.open(currentUrl, '_system');
+          window.open(currentUrl, "_system");
         }, 300);
       }, 300);
-    } else if (platform === 'android') {
-      // For Android, we'll try the intent URL from utils
-      window.location.href = externalUrl;
-
-      // Fallback if intent doesn't work
-      setTimeout(() => {
-        window.open(currentUrl, '_system');
-      }, 300);
+    } else if (platform === "android") {
+      window.location.href = externalUrl;          // intent://…
+      setTimeout(() => window.open(currentUrl, "_system"), 300);
     } else {
-      // For desktop/other, simply open in new tab
-      window.open(currentUrl, '_blank');
+      window.open(currentUrl, "_blank");
     }
 
-    // Close the modal after attempting to open
     onClose();
   };
 
