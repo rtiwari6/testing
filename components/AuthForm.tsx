@@ -12,7 +12,7 @@ import { isEmbedded } from "@/lib/utils";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithPopup, signInWithRedirect,
 } from "firebase/auth";
 
 import { Form } from "@/components/ui/form";
@@ -82,40 +82,31 @@ const AuthForm = ({ type }: { type: FormType }) => {
   };
 
   const handleGoogleLogin = async () => {
-    /*
-     * Case 1: The app is inside an embedded WebView → open a brand-new
-     * tab that runs at the top browser context. Google approves that.
-     */
-    if (isEmbedded()) {
-      window.open("/google-external", "_blank", "noopener,noreferrer");
-      return;   // stop here; everything continues in the new tab
+    // 1) If we detect an embedded in-app WebView, escape to /google-external
+    if (typeof window !== 'undefined' && isEmbedded()) {
+      window.open('/google-external', '_blank', 'noopener,noreferrer');
+      return;
     }
 
-    /*
-     * Case 2: Normal browsers → try the popup. If it is blocked
-     * (common on Safari iOS), fall back to full-page redirect.
-     */
+    // 2) Otherwise, try the standard popup flow
     try {
-      const popupResult = await signInWithPopup(auth, provider);
-
-      const user    = popupResult.user;
-      const idToken = await user.getIdToken();
-
-      await signIn({ email: user.email as string, idToken });
-      toast.success("Signed in with Google");
-      router.push("/");
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      await signIn({ email: result.user.email!, idToken });
+      toast.success('Signed in with Google');
+      router.push('/');
     } catch (err: any) {
-      // Popup blocked or user closed it → redirect flow
-      const blocked = err?.code === "auth/popup-blocked";
-      const closed  = err?.code === "auth/popup-closed-by-user";
-      if (blocked || closed) {
+      // If popup is blocked (Safari iOS), fall back to full-page redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
         await signInWithRedirect(auth, provider);
         return;
       }
       console.error(err);
-      toast.error("Google sign-in failed");
+      toast.error('Google sign-in failed');
     }
   };
+
+
 
   const isSignIn = type === "sign-in";
 
@@ -174,7 +165,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
               onClick={handleGoogleLogin}
               className="btn-secondary w-full flex items-center justify-center gap-2"
           >
-            {/* Using public CDN for the “G” logo */}
+            
             <img
                 src="/google.svg"
                 alt="Google logo"
