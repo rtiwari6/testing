@@ -51,7 +51,7 @@ const BrowserRedirectModal = ({
         }, 300);
       }, 300);
     } else if (platform === "android") {
-      window.location.href = externalUrl;          // intent://…
+      window.location.href = externalUrl;
       setTimeout(() => window.open(currentUrl, "_system"), 300);
     } else {
       window.open(currentUrl, "_blank");
@@ -66,13 +66,10 @@ const BrowserRedirectModal = ({
           <DialogTitle>
             Open in Browser
           </DialogTitle>
-          <DialogDescription>
-            For the best experience with Google Sign-In, please open this page in your device's browser.
-          </DialogDescription>
 
           <div className="flex flex-col space-y-4 mt-4">
             <p className="text-sm">
-              Using Google Sign-In may not work properly in in-app browsers. Opening in your device's native browser will ensure a smooth login experience.
+              To Continue with Google Sign-In, please open this page in a browser.
             </p>
 
             {platform === 'ios' && (
@@ -89,13 +86,10 @@ const BrowserRedirectModal = ({
           </div>
 
           <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Continue Anyway
-            </Button>
 
             <Button
                 onClick={handleOpenInBrowser}
-                className="bg-primary text-white hover:bg-primary/90"
+                className="bg-black/30 text-white backdrop-blur-md hover:bg-black/50"
             >
               Open in Browser
             </Button>
