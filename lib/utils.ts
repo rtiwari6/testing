@@ -16,7 +16,7 @@ const normalizeTechName = (tech: string) => {
 const checkIconExists = async (url: string) => {
   try {
     const response = await fetch(url, { method: "HEAD" });
-    return response.ok; // Returns true if the icon exists
+    return response.ok;
   } catch {
     return false;
   }
@@ -46,63 +46,47 @@ export const getRandomInterviewCover = () => {
   return `/covers${interviewCovers[randomIndex]}`;
 };
 
+// Simplified identifiers for common in-app browsers/webviews
+const inAppBrowserIdentifiers = [
+  "linkedinapp",
+  "fban",      // Facebook App
+  "fbav",      // Facebook App
+  "instagram",
+  "line",
+  "wv",        // Generic WebView
+  "fb_iab",    // Facebook in-app browser
+  "messenger", // Generic messenger
+  "whatsapp",
+  "telegram",
+  "pinterest",
+  "tiktok",
+  "gmail",
+];
+
 /**
  * Detects if the application is running inside an in-app browser/webview
  */
 export const isEmbedded = (): boolean => {
-  // Return false if running on server
-  if (typeof window === 'undefined') return false;
-
-  const ua = navigator.userAgent || '';
-
-  // Patterns for common in-app browsers and webviews
-  const patterns = [
-    // Social media apps
-    /FBAN|FBAV|FB_IAB/i,            // Facebook
-    /Instagram/i,                   // Instagram
-    /Twitter/i,                     // Twitter
-    /LinkedIn(App)?/i,              // LinkedIn
-    /\bPinterest\b/i,               // Pinterest
-    /TikTok/i,                      // TikTok
-
-    // Messaging apps
-    /\bLine\b/i,                    // Line
-    /\bFBMessenger\b|MESSENGER/i,   // Facebook Messenger
-    /\bWhatsApp\b/i,                // WhatsApp
-    /\bTelegram\b/i,                // Telegram
-
-    // Mail apps
-    /\bGmail\b/i,                   // Gmail
-
-    // Generic webview indicators
-    /\bwv\b|WebView/i,              // Generic WebView
-    /Android.*(wv|.0.0.0)/,         // Android WebView
-
-    // iOS in-app browser indicators
-    /^Mozilla.*Darwin.*iPhone.*AppleWebKit(?!.*Safari)/i,
-
-    // Additional patterns
-    /GSA\/|Google\/|__GSA__/i,      // Google app
-  ];
-
-  return patterns.some(pattern => pattern.test(ua));
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const isMobile = /iphone|ipad|android/i.test(ua);
+  const isInApp = inAppBrowserIdentifiers.some((id) => ua.includes(id));
+  return isMobile && isInApp;
 };
 
 /**
- * Gets the current platform (iOS or Android)
+ * Gets the current platform (iOS, Android, or other)
  */
-export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
-  if (typeof window === 'undefined') return 'other';
-
-  const ua = navigator.userAgent || '';
+export const getMobilePlatform = (): "ios" | "android" | "other" => {
+  if (typeof navigator === "undefined") return "other";
+  const ua = navigator.userAgent || "";
 
   if (/iPhone|iPad|iPod/i.test(ua)) {
-    return 'ios';
+    return "ios";
   } else if (/Android/i.test(ua)) {
-    return 'android';
+    return "android";
   }
-
-  return 'other';
+  return "other";
 };
 
 /**
@@ -111,10 +95,12 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
  */
 export const getExternalBrowserUrl = (): string => {
   if (typeof window === "undefined") {
-    return "https://testing-psi-virid.vercel.app/";    // SSR fallback
+    // SSR fallback
+    return "https://testing-psi-virid.vercel.app/";
   }
 
-  const { href, protocol } = window.location;          // full current URL
+  const href = window.location.href;
+  const { protocol } = window.location;
   const platform = getMobilePlatform();
 
   if (platform === "ios") {
@@ -124,15 +110,19 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Extract the domain and path separately to ensure proper handling
-    const url = new URL(href);
-    const domain = url.hostname;
-    const pathWithQuery = url.pathname + url.search + url.hash;
+    const parsed = new URL(href);
+    const hostAndPath =
+        parsed.host + parsed.pathname + parsed.search + parsed.hash;
 
-    // Construct intent URL with S.browser_fallback_url parameter
-    return `intent://${domain}${pathWithQuery}#Intent;scheme=${protocol.replace(":", "")};S.browser_fallback_url=${encodeURIComponent(href)};end`;
+    return (
+        `intent://${hostAndPath}` +
+        `#Intent;scheme=${parsed.protocol.replace(":", "")};` +
+        `package=com.android.chrome;` +
+        `S.browser_fallback_url=${encodeURIComponent(href)};` +
+        `end`
+    );
   }
 
-  // Desktop or anything else
+  // Desktop or other platforms
   return href;
 };
