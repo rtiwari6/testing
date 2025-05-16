@@ -45,3 +45,16 @@ export const getRandomInterviewCover = () => {
   const randomIndex = Math.floor(Math.random() * interviewCovers.length);
   return `/covers${interviewCovers[randomIndex]}`;
 };
+
+/**
+ * Returns true when the user-agent looks like an in-app or embedded browser
+ * that Google blocks with the “disallowed_useragent / use secure browser” error.
+ * We rely on well-known substrings from Instagram, Facebook, Gmail, TikTok, etc.
+ */
+export const isEmbedded = (): boolean => {
+  const ua = (typeof navigator === 'undefined' ? '' : navigator.userAgent) ||
+      (typeof navigator === 'undefined' ? '' : navigator.vendor) ||
+      '';
+  const pattern = /FBAN|FBAV|Instagram|Line|WebView|wv|MicroMessenger/i;
+  return pattern.test(ua);
+};
