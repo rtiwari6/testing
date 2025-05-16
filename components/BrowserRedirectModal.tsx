@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getExternalBrowserUrl } from '@/lib/utils';
-
-
+import { getExternalBrowserUrl, getMobilePlatform } from '@/lib/utils';
 
 interface BrowserRedirectModalProps {
   isOpen: boolean;
@@ -19,13 +17,13 @@ interface BrowserRedirectModalProps {
   onClose: () => void;
 }
 
-const BrowserRedirectModal = ({ 
-  isOpen, 
-  platform, 
-  onClose 
-}: BrowserRedirectModalProps) => {
+const BrowserRedirectModal = ({
+                                isOpen,
+                                platform,
+                                onClose
+                              }: BrowserRedirectModalProps) => {
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -33,52 +31,86 @@ const BrowserRedirectModal = ({
   // Prevent rendering during SSR
   if (!isMounted) return null;
 
+  const handleOpenInBrowser = () => {
+    const externalUrl = getExternalBrowserUrl();
+    const { origin, pathname, search, hash } = window.location;
+    const currentUrl = `${origin}${pathname}${search}${hash}`;
+
+    if (platform === 'ios') {
+      // Try multiple approaches for iOS
+      // First attempt with x-web-search protocol (which should be in the URL from getExternalBrowserUrl)
+      window.location.href = externalUrl;
+
+      // Set a timeout to try alternative methods if the first doesn't work
+      setTimeout(() => {
+        // Second attempt with a different protocol
+        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+
+        // Third attempt with yet another approach
+        setTimeout(() => {
+          // Try direct approach as last resort
+          window.open(currentUrl, '_system');
+        }, 300);
+      }, 300);
+    } else if (platform === 'android') {
+      // For Android, we'll try the intent URL from utils
+      window.location.href = externalUrl;
+
+      // Fallback if intent doesn't work
+      setTimeout(() => {
+        window.open(currentUrl, '_system');
+      }, 300);
+    } else {
+      // For desktop/other, simply open in new tab
+      window.open(currentUrl, '_blank');
+    }
+
+    // Close the modal after attempting to open
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogTitle>
-          Open in Browser
-        </DialogTitle>
-        <DialogDescription>
-          For the best experience with Google Sign-In, please open this page in your device's browser.
-        </DialogDescription>
-        
-        <div className="flex flex-col space-y-4 mt-4">
-          <p className="text-sm">
-            Using Google Sign-In may not work properly in in-app browsers. Opening in your device's native browser will ensure a smooth login experience.
-          </p>
-          
-          {platform === 'ios' && (
-            <p className="text-xs text-muted-foreground">
-              You'll be redirected to Safari to continue.
-            </p>
-          )}
-          
-          {platform === 'android' && (
-            <p className="text-xs text-muted-foreground">
-              Select your browser when prompted to continue.
-            </p>
-          )}
-        </div>
-
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Continue Anyway
-          </Button>
-
-          {/* REAL <a> — the tap itself is the trusted gesture */}
-          <a
-              href={getExternalBrowserUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
-              onClick={onClose}   // close the dialog right after the tap
-          >
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>
             Open in Browser
-          </a>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </DialogTitle>
+          <DialogDescription>
+            For the best experience with Google Sign-In, please open this page in your device's browser.
+          </DialogDescription>
+
+          <div className="flex flex-col space-y-4 mt-4">
+            <p className="text-sm">
+              Using Google Sign-In may not work properly in in-app browsers. Opening in your device's native browser will ensure a smooth login experience.
+            </p>
+
+            {platform === 'ios' && (
+                <p className="text-xs text-muted-foreground">
+                  You'll be redirected to Safari to continue.
+                </p>
+            )}
+
+            {platform === 'android' && (
+                <p className="text-xs text-muted-foreground">
+                  Select your browser when prompted to continue.
+                </p>
+            )}
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Continue Anyway
+            </Button>
+
+            <Button
+                onClick={handleOpenInBrowser}
+                className="bg-primary text-white hover:bg-primary/90"
+            >
+              Open in Browser
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
   );
 };
 
