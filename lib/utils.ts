@@ -109,19 +109,11 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
  * Constructs a URL for opening the app in a browser
  */
 export const getExternalBrowserUrl = (): string => {
-  if (typeof window === 'undefined') return '';
-
-  // Get the current URL
-  const currentUrl = window.location.href;
-
-  // For iOS we can use the special "x-web-search" protocol
-  const platform = getMobilePlatform();
-
-  if (platform === 'ios') {
-    // This will open Safari with the URL
-    return `x-web-search://${encodeURIComponent(currentUrl)}`;
-  } else {
-    // For Android, we simply return the URL since we'll use an intent system
-    return currentUrl;
+  if (typeof window === 'undefined') {
+    // Fallback if somehow called on the server:
+    return 'https://testing-psi-virid.vercel.app/';
   }
+  // Build the full current URL (origin + path + query + hash)
+  const { origin, pathname, search, hash } = window.location;
+  return `${origin}${pathname}${search}${hash}`;
 };
