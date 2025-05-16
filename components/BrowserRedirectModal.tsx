@@ -66,15 +66,22 @@ const BrowserRedirectModal = ({
             Continue Anyway
           </Button>
 
-          <a
-              href={getExternalBrowserUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
-              onClick={onClose}
+          <Button
+              onClick={() => {
+                // Create a hidden link to trigger the browser
+                const link = document.createElement('a');
+                link.href = getExternalBrowserUrl();
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                onClose();
+              }}
           >
             Open in Browser
-          </a>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
