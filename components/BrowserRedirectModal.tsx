@@ -36,10 +36,14 @@ const BrowserRedirectModal = ({
     const currentUrl = `${origin}${pathname}${search}${hash}`;
 
     if (platform === 'ios') {
-      // Use a direct approach for iOS - open in Safari directly
-      // This uses the fact that location.href with a standard https:// URL will
-      // force iOS to open in Safari when in an in-app browser
-      window.location.href = `https://apps.apple.com/us/app/safari/id1146562112?mt=12&url=${encodeURIComponent(currentUrl)}`;
+      // For iOS, direct open in Safari using a simple approach
+      // This is the most reliable way to force opening in Safari from in-app browsers
+      window.location.href = currentUrl;
+
+      // Add a small timeout for tracking purposes
+      setTimeout(() => {
+        console.log("Attempted to open in Safari");
+      }, 100);
     } else if (platform === 'android') {
       // For Android, use intent URL
       window.location.href = `intent:${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
