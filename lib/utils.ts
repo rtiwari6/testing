@@ -47,13 +47,12 @@ export const getRandomInterviewCover = () => {
 };
 
 export const isEmbedded = (): boolean => {
-  // guard for SSR
   const ua =
-    (typeof navigator === "undefined" ? "" : navigator.userAgent) ||
-    (typeof navigator === "undefined" ? "" : navigator.vendor) ||
-    "";
+    (typeof navigator === 'undefined' ? '' : navigator.userAgent) ||
+    (typeof navigator === 'undefined' ? '' : navigator.vendor)   ||
+    '';
 
-  // Common substrings for popular WebViews
+  // Common markers for Instagram, LinkedIn, Gmail, Facebook, TikTok, etc.
   const pattern =
     /FBAN|FBAV|Instagram|Line|WebView|wv|Messenger|LinkedInApp|LinkedIn|TikTok/i;
 
