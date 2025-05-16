@@ -8,6 +8,7 @@ import { provider, auth } from "@/firebase/client";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isEmbedded } from "@/lib/utils";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -81,15 +82,37 @@ const AuthForm = ({ type }: { type: FormType }) => {
   };
 
   const handleGoogleLogin = async () => {
+    /*
+     * Case 1: The app is inside an embedded WebView → open a brand-new
+     * tab that runs at the top browser context. Google approves that.
+     */
+    if (isEmbedded()) {
+      window.open("/google-external", "_blank", "noopener,noreferrer");
+      return;   // stop here; everything continues in the new tab
+    }
+
+    /*
+     * Case 2: Normal browsers → try the popup. If it is blocked
+     * (common on Safari iOS), fall back to full-page redirect.
+     */
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const popupResult = await signInWithPopup(auth, provider);
+
+      const user    = popupResult.user;
       const idToken = await user.getIdToken();
-      await signIn({ email: user.email!, idToken });
+
+      await signIn({ email: user.email as string, idToken });
       toast.success("Signed in with Google");
       router.push("/");
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      // Popup blocked or user closed it → redirect flow
+      const blocked = err?.code === "auth/popup-blocked";
+      const closed  = err?.code === "auth/popup-closed-by-user";
+      if (blocked || closed) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      console.error(err);
       toast.error("Google sign-in failed");
     }
   };
