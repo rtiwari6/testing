@@ -109,12 +109,12 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
  * Constructs a URL for opening the app in a browser
  */
 export const getExternalBrowserUrl = (): string => {
-  if (typeof window === "undefined") return "https://testing-psi-virid.vercel.app/";   // SSR fallback
+  if (typeof window === "undefined") return "https://youtube.com";   // SSR fallback
 
   // Preserve the full current URL
   const { origin, pathname, search, hash } = window.location;
   const fullUrl = `${origin}${pathname}${search}${hash}`;
 
   // You can return the same URL for both iOS and Android
-  return fullUrl || "https://testing-psi-virid.vercel.app/";  // second value as safety net
+  return fullUrl || "https://youtube.com";  // second value as safety net
 };
