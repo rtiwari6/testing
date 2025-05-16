@@ -109,27 +109,42 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
  * Builds a deep-link that tries to open the page
  * in the user’s real browser instead of the in-app web-view.
  */
+/**
+ * Builds a deep link that opens the page in a real browser
+ * on Android (intent://…) or iOS (x-safari-https://…).
+ */
 export const getExternalBrowserUrl = (): string => {
   if (typeof window === "undefined") {
-    return "https://testing-psi-virid.vercel.app/";    // SSR fallback
+    return "https://testing-psi-virid.vercel.app/";           // SSR fallback
   }
 
-  const { href, protocol } = window.location;          // full current URL
+  const { href, protocol } = window.location;                 // full URL e.g. https://foo.com/bar?x=1#y
   const platform = getMobilePlatform();
 
+  /* ---------- iOS ---------- */
   if (platform === "ios") {
-    /* iOS 17 +:  x-safari-https://example.com
-       iOS < 17:  falls back to next attempt in handleOpenInBrowser()       */
-    const scheme =
-        protocol === "https:" ? "x-safari-https://" : "x-safari-http://";
+    const scheme = protocol === "https:" ? "x-safari-https://" : "x-safari-http://";
     return href.replace(/^https?:\/\//, scheme);
   }
 
+  /* ---------- Android ---------- */
   if (platform === "android") {
-    // Deep-link that lets the user pick a real browser
-    return `intent:${href}#Intent;scheme=${protocol.replace(":", "")};end`;
+    // remove "https://" or "http://"
+    const urlWithoutScheme = href.replace(/^https?:\/\//, "");
+
+    /* Full intent URL:
+       - opens the chooser if several browsers exist
+       - falls back to the normal link if the user cancels */
+    return (
+        `intent://${urlWithoutScheme}` +
+        `#Intent;scheme=${protocol.slice(0, -1)}` +             // http or https
+        `;action=android.intent.action.VIEW` +
+        `;category=android.intent.category.BROWSABLE` +
+        `;S.browser_fallback_url=${encodeURIComponent(href)}` + // graceful fallback
+        `;end`
+    );
   }
 
-  // Desktop or anything else
+  /* ---------- Desktop / others ---------- */
   return href;
 };
