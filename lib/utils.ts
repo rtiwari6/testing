@@ -107,12 +107,30 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
 
 /**
  * Constructs a URL for opening the app in a browser
- * This function is no longer needed as we handle the browser opening directly
- * in the BrowserRedirectModal component
  */
 export const getExternalBrowserUrl = (): string => {
   if (typeof window === 'undefined') return 'https://testing-psi-virid.vercel.app/'; // SSR fallback
 
   const { origin, pathname, search, hash } = window.location;
-  return `${origin}${pathname}${search}${hash}`;
+  const currentUrl = `${origin}${pathname}${search}${hash}`;
+
+  // Get the platform
+  const platform = getMobilePlatform();
+
+  if (platform === 'ios') {
+    // iOS-specific universal links that force safari to open
+    // Try multiple approaches for iOS
+
+    // Option 1: Use x-web-search protocol handler (works on many iOS versions)
+    return `x-web-search://?${encodeURIComponent(currentUrl)}`;
+
+    // If that doesn't work, we'll try Option 2 in BrowserRedirectModal
+  } else if (platform === 'android') {
+    // For Android, we construct an intent URL
+    // This format tries to force Chrome or default browser to open
+    return `intent:${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+  } else {
+    // Default fallback
+    return currentUrl;
+  }
 };

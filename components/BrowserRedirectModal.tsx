@@ -9,7 +9,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getMobilePlatform } from '@/lib/utils';
+import { getExternalBrowserUrl, getMobilePlatform } from '@/lib/utils';
 
 interface BrowserRedirectModalProps {
   isOpen: boolean;
@@ -32,21 +32,29 @@ const BrowserRedirectModal = ({
   if (!isMounted) return null;
 
   const handleOpenInBrowser = () => {
+    const externalUrl = getExternalBrowserUrl();
     const { origin, pathname, search, hash } = window.location;
     const currentUrl = `${origin}${pathname}${search}${hash}`;
 
     if (platform === 'ios') {
-      // For iOS, direct open in Safari using a simple approach
-      // This is the most reliable way to force opening in Safari from in-app browsers
-      window.location.href = currentUrl;
+      // Try multiple approaches for iOS
+      // First attempt with x-web-search protocol (which should be in the URL from getExternalBrowserUrl)
+      window.location.href = externalUrl;
 
-      // Add a small timeout for tracking purposes
+      // Set a timeout to try alternative methods if the first doesn't work
       setTimeout(() => {
-        console.log("Attempted to open in Safari");
-      }, 100);
+        // Second attempt with a different protocol
+        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+
+        // Third attempt with yet another approach
+        setTimeout(() => {
+          // Try direct approach as last resort
+          window.open(currentUrl, '_system');
+        }, 300);
+      }, 300);
     } else if (platform === 'android') {
-      // For Android, use intent URL
-      window.location.href = `intent:${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+      // For Android, we'll try the intent URL from utils
+      window.location.href = externalUrl;
 
       // Fallback if intent doesn't work
       setTimeout(() => {
