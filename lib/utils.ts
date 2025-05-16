@@ -124,7 +124,13 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    return `intent:${href}#Intent;scheme=${protocol.replace(":", "")};end`;
+    // Extract the domain and path separately to ensure proper handling
+    const url = new URL(href);
+    const domain = url.hostname;
+    const pathWithQuery = url.pathname + url.search + url.hash;
+
+    // Construct intent URL with S.browser_fallback_url parameter
+    return `intent://${domain}${pathWithQuery}#Intent;scheme=${protocol.replace(":", "")};S.browser_fallback_url=${encodeURIComponent(href)};end`;
   }
 
   // Desktop or anything else
