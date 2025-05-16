@@ -33,25 +33,6 @@ const BrowserRedirectModal = ({
   // Prevent rendering during SSR
   if (!isMounted) return null;
 
-  const handleOpenInBrowser = () => {
-    const externalUrl = getExternalBrowserUrl();
-    
-    if (platform === 'ios') {
-      // For iOS, we use the special URL scheme that triggers Safari
-      window.location.href = externalUrl;
-      
-      // iOS might not always redirect, so we provide a fallback
-      setTimeout(() => {
-        window.location.href = window.location.href;
-      }, 500);
-    } else if (platform === 'android') {
-      // For Android, we open in a new tab which will trigger the browser selection
-      window.open(externalUrl, '_system');
-    }
-    
-    onClose();
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -79,14 +60,21 @@ const BrowserRedirectModal = ({
             </p>
           )}
         </div>
-        
-        <DialogFooter className="flex sm:justify-between flex-col-reverse sm:flex-row gap-2">
+
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             Continue Anyway
           </Button>
-          <Button onClick={handleOpenInBrowser}>
+
+          <a
+              href={getExternalBrowserUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
+              onClick={onClose}
+          >
             Open in Browser
-          </Button>
+          </a>
         </DialogFooter>
       </DialogContent>
     </Dialog>
