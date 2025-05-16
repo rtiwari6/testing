@@ -9,7 +9,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getExternalBrowserUrl, getMobilePlatform } from '@/lib/utils';
+import {getExternalBrowserUrl, getMobilePlatform, isEmbedded} from '@/lib/utils';
 
 interface BrowserRedirectModalProps {
   isOpen: boolean;
@@ -51,8 +51,13 @@ const BrowserRedirectModal = ({
         }, 300);
       }, 300);
     } else if (platform === "android") {
-      window.location.href = externalUrl;          // intent://…
-      setTimeout(() => window.open(currentUrl, "_system"), 300);
+      /* 1️⃣ try intent:// — user sees browser picker */
+      window.location.href = externalUrl;
+
+      /* 2️⃣ soft fallback only if we’re *still* inside the web-view after 1.5 s */
+      setTimeout(() => {
+        if (isEmbedded()) window.open(currentUrl, "_blank");
+      }, 1500);
     } else {
       window.open(currentUrl, "_blank");
     }
