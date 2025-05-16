@@ -109,12 +109,19 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
  * Constructs a URL for opening the app in a browser
  */
 export const getExternalBrowserUrl = (): string => {
-  if (typeof window === "undefined") return "https://youtube.com";   // SSR fallback
+  if (typeof window === 'undefined') return '';
 
-  // Preserve the full current URL
-  const { origin, pathname, search, hash } = window.location;
-  const fullUrl = `${origin}${pathname}${search}${hash}`;
+  // Get the current URL
+  const currentUrl = window.location.href;
 
-  // You can return the same URL for both iOS and Android
-  return fullUrl || "https://youtube.com";  // second value as safety net
+  // For iOS we can use the special "x-web-search" protocol
+  const platform = getMobilePlatform();
+
+  if (platform === 'ios') {
+    // This will open Safari with the URL
+    return `x-web-search://${encodeURIComponent(currentUrl)}`;
+  } else {
+    // For Android, we simply return the URL since we'll use an intent system
+    return currentUrl;
+  }
 };
