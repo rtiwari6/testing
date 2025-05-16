@@ -118,17 +118,19 @@ export const getExternalBrowserUrl = (): string => {
   const platform = getMobilePlatform();
 
   if (platform === "ios") {
-    /* iOS 17 +:  x-safari-https://example.com
-       iOS < 17:  falls back to next attempt in handleOpenInBrowser()       */
     const scheme =
         protocol === "https:" ? "x-safari-https://" : "x-safari-http://";
     return href.replace(/^https?:\/\//, scheme);
   }
 
   if (platform === "android") {
+    /* Android browser intent scheme */
+    const scheme =
+        protocol === "https:" ? "intent://" : "intent://";
+    const intentSuffix = `#Intent;scheme=${protocol.replace(":", "")};end`;
 
-    const urlNoProto = href.replace(/^https?:\/\//, "");
-    return `intent://${urlNoProto}#Intent;scheme=${protocol.replace(':', '')};package=com.android.chrome;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end;`;
+    // Replace http:// or https:// with the intent scheme and add suffix
+    return scheme + href.replace(/^https?:\/\//, "") + intentSuffix;
   }
 
   // Desktop or anything else
