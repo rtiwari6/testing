@@ -114,7 +114,7 @@ export const getExternalBrowserUrl = (): string => {
     return "https://testing-psi-virid.vercel.app/";    // SSR fallback
   }
 
-  const { href, protocol, origin, pathname, search, hash } = window.location;  // full current URL
+  const { href, protocol } = window.location;          // full current URL
   const platform = getMobilePlatform();
 
   if (platform === "ios") {
@@ -126,9 +126,8 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Fixed deep-link that properly includes the full URL
-    const fullUrl = encodeURIComponent(href);
-    return `intent:${fullUrl}#Intent;scheme=${protocol.replace(":", "")};package=com.android.chrome;end`;
+    // Deep-link that lets the user pick a real browser with the full URL
+    return `intent://${href.replace(/^https?:\/\//, '')}#Intent;scheme=${protocol.replace(":", "")};package=com.android.chrome;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(href)};end`;
   }
 
   // Desktop or anything else
