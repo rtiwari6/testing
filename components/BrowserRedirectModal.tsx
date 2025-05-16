@@ -9,7 +9,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getExternalBrowserUrl, getMobilePlatform } from '@/lib/utils';
+import { getExternalBrowserUrl, getMobilePlatform, isEmbedded, isEmbedded } from '@/lib/utils';
 
 interface BrowserRedirectModalProps {
   isOpen: boolean;
@@ -32,44 +32,22 @@ const BrowserRedirectModal = ({
   if (!isMounted) return null;
 
   const handleOpenInBrowser = () => {
-    const externalUrl = getExternalBrowserUrl();
     const { origin, pathname, search, hash } = window.location;
     const currentUrl = `${origin}${pathname}${search}${hash}`;
 
-    if (platform === "ios") {
-      // 1️⃣  Try the x-safari- scheme (no Google search!)
-      window.location.href = externalUrl;
-
-      // 2️⃣  Fallback – open in Chrome if installed
-      setTimeout(() => {
-        window.location.href =
-            `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
-
-        // 3️⃣  Final fallback – let the system decide
-        setTimeout(() => {
-          window.open(currentUrl, "_system");
-        }, 300);
-      }, 300);
-    } else if (platform === "android") {
-      // For Android, we'll try multiple approaches in sequence
-      
-      // 1. Try to open in Chrome directly
-      window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
-      
-      // 2. If Chrome isn't installed, try the market URL
-      setTimeout(() => {
-        window.location.href = externalUrl;
-        
-        // 3. Final fallback - open in system browser
-        setTimeout(() => {
-          window.open(currentUrl, "_system");
-        }, 300);
-      }, 300);
+    // Only redirect if we're in an app's webview
+    if (isEmbedded()) {
+      if (platform === "ios") {
+        // For iOS, use the x-safari- scheme
+        window.location.href = `x-safari-https://${origin}${pathname}${search}${hash}`;
+      } else if (platform === "android") {
+        // For Android, use intent URL to open in system browser
+        window.location.href = `intent://${origin}${pathname}${search}${hash}#Intent;scheme=https;package=com.android.chrome;end`;
+      }
     } else {
-      window.open(currentUrl, "_blank");
+      // If we're already in a browser, just close the modal
+      onClose();
     }
-
-    onClose();
   };
 
   return (
