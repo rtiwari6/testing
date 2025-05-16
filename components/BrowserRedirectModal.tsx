@@ -89,7 +89,8 @@ const BrowserRedirectModal = ({
 
             <Button
                 onClick={handleOpenInBrowser}
-                className="bg-black/30 text-white backdrop-blur-md hover:bg-black/50"
+                className="bg-blue-500/30 text-white backdrop-blur-md hover:bg-blue-500/50"
+
             >
               Open in Browser
             </Button>
