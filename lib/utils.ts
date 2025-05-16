@@ -52,9 +52,9 @@ export const getRandomInterviewCover = () => {
  * We rely on well-known substrings from Instagram, Facebook, Gmail, TikTok, etc.
  */
 export const isEmbedded = (): boolean => {
-  const ua = (typeof navigator === 'undefined' ? '' : navigator.userAgent) ||
-      (typeof navigator === 'undefined' ? '' : navigator.vendor) ||
-      '';
-  const pattern = /FBAN|FBAV|Instagram|Line|WebView|wv|MicroMessenger/i;
-  return pattern.test(ua);
+  // Check for WebView patterns in both userAgent and vendor
+  return (
+    /(WebView|Android.*(wv|.0.0.0))/i.test(navigator.userAgent) ||
+    /(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(navigator.vendor || "")
+  );
 };
