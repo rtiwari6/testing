@@ -126,11 +126,20 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    /* open chooser → user picks real browser */
-    return `intent:${href}#Intent;` +
+    // 1) Drop the leading "https://" or "http://"
+    const urlNoProto = href.replace(/^https?:\/\//, "");
+
+    // 2) Prefix with intent://HOST/PATH so Chrome treats it as a deep link
+    return (
+        `intent://${urlNoProto}` +
+        `#Intent;` +
+        // re-declare the scheme (http or https) so the target browser knows how to fetch
+        `scheme=${protocol.slice(0, -1)};` +
+        // the usual Android VIEW intent
         `action=android.intent.action.VIEW;` +
         `category=android.intent.category.BROWSABLE;` +
-        `end`;
+        `end`
+    );
   }
 
   // Desktop or anything else
