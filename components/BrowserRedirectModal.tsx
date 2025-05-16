@@ -32,7 +32,7 @@ const BrowserRedirectModal = ({
   if (!isMounted) return null;
 
   const handleOpenInBrowser = () => {
-    const externalUrl = getExternalBrowserUrl();   // now x-safari-https://…
+    const externalUrl = getExternalBrowserUrl();
     const { origin, pathname, search, hash } = window.location;
     const currentUrl = `${origin}${pathname}${search}${hash}`;
 
@@ -51,8 +51,19 @@ const BrowserRedirectModal = ({
         }, 300);
       }, 300);
     } else if (platform === "android") {
+      // Try to open in Chrome first
       window.location.href = externalUrl;
-      setTimeout(() => window.open(currentUrl, "_system"), 300);
+      
+      // Fallback to system browser after a short delay
+      setTimeout(() => {
+        // Try to open in Chrome directly
+        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+        
+        // Final fallback to system browser
+        setTimeout(() => {
+          window.open(currentUrl, "_system");
+        }, 300);
+      }, 300);
     } else {
       window.open(currentUrl, "_blank");
     }
