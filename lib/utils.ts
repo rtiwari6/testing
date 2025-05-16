@@ -126,8 +126,13 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Deep-link that lets the user pick a real browser with the full URL
-    return `intent://${href.replace(/^https?:\/\//, '')}#Intent;scheme=${protocol.replace(":", "")};package=com.android.chrome;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(href)};end`;
+    // Proper Android Intent with fallback
+    return `intent:${href}#Intent;` +
+        `action=android.intent.action.VIEW;` +
+        `scheme=${protocol.replace(":", "")};` +
+        `package=com.android.chrome;` +  // Optional: Prefer Chrome
+        `S.browser_fallback_url=${encodeURIComponent(href)};` + // Fallback
+        `end`;
   }
 
   // Desktop or anything else
