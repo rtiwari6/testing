@@ -69,7 +69,7 @@ const BrowserRedirectModal = ({
 
           <div className="flex flex-col space-y-4 mt-4">
             <p className="text-sm">
-              To Continue with Google Sign-In, please open this page in a browser.
+              To continue with Google Sign-In, please open this page in your browser
             </p>
 
             {platform === 'ios' && (
