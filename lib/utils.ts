@@ -126,8 +126,11 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // Deep-link that lets the user pick a real browser
-    return `intent:${href}#Intent;scheme=${protocol.replace(":", "")};end`;
+    /* open chooser → user picks real browser */
+    return `intent:${href}#Intent;` +
+        `action=android.intent.action.VIEW;` +
+        `category=android.intent.category.BROWSABLE;` +
+        `end`;
   }
 
   // Desktop or anything else
