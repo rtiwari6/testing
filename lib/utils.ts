@@ -107,7 +107,7 @@ export const getMobilePlatform = (): 'ios' | 'android' | 'other' => {
 
 /**
  * Builds a deep-link that tries to open the page
- * in the user's real browser instead of the in-app web-view.
+ * in the user’s real browser instead of the in-app web-view.
  */
 export const getExternalBrowserUrl = (): string => {
   if (typeof window === "undefined") {
@@ -124,8 +124,13 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    // For Android, we'll use a simpler approach that works more reliably
-    return `market://details?id=com.android.chrome&url=${encodeURIComponent(href)}`;
+    // Extract the domain and path separately to ensure proper handling
+    const url = new URL(href);
+    const domain = url.hostname;
+    const pathWithQuery = url.pathname + url.search + url.hash;
+
+    // Construct intent URL with S.browser_fallback_url parameter
+    return `intent://${domain}${pathWithQuery}#Intent;scheme=${protocol.replace(":", "")};S.browser_fallback_url=${encodeURIComponent(href)};end`;
   }
 
   // Desktop or anything else

@@ -9,7 +9,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getExternalBrowserUrl, getMobilePlatform, isEmbedded, isEmbedded } from '@/lib/utils';
+import { getExternalBrowserUrl, getMobilePlatform } from '@/lib/utils';
 
 interface BrowserRedirectModalProps {
   isOpen: boolean;
@@ -32,22 +32,32 @@ const BrowserRedirectModal = ({
   if (!isMounted) return null;
 
   const handleOpenInBrowser = () => {
+    const externalUrl = getExternalBrowserUrl();   // now x-safari-https://…
     const { origin, pathname, search, hash } = window.location;
     const currentUrl = `${origin}${pathname}${search}${hash}`;
 
-    // Only redirect if we're in an app's webview
-    if (isEmbedded()) {
-      if (platform === "ios") {
-        // For iOS, use the x-safari- scheme
-        window.location.href = `x-safari-https://${origin}${pathname}${search}${hash}`;
-      } else if (platform === "android") {
-        // For Android, use intent URL to open in system browser
-        window.location.href = `intent://${origin}${pathname}${search}${hash}#Intent;scheme=https;package=com.android.chrome;end`;
-      }
+    if (platform === "ios") {
+      // 1️⃣  Try the x-safari- scheme (no Google search!)
+      window.location.href = externalUrl;
+
+      // 2️⃣  Fallback – open in Chrome if installed
+      setTimeout(() => {
+        window.location.href =
+            `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
+
+        // 3️⃣  Final fallback – let the system decide
+        setTimeout(() => {
+          window.open(currentUrl, "_system");
+        }, 300);
+      }, 300);
+    } else if (platform === "android") {
+      window.location.href = externalUrl;
+      setTimeout(() => window.open(currentUrl, "_system"), 300);
     } else {
-      // If we're already in a browser, just close the modal
-      onClose();
+      window.open(currentUrl, "_blank");
     }
+
+    onClose();
   };
 
   return (
