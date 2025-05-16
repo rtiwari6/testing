@@ -11,6 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { getExternalBrowserUrl } from '@/lib/utils';
 
+
+
 interface BrowserRedirectModalProps {
   isOpen: boolean;
   platform: 'ios' | 'android' | 'other';
