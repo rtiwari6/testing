@@ -8,6 +8,7 @@ import { provider, auth } from "@/firebase/client";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForceExternalBrowser } from '@/lib/useForceExternalBrowser';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -29,6 +30,7 @@ const authFormSchema = (type: FormType) => {
 };
 
 const AuthForm = ({ type }: { type: FormType }) => {
+  useForceExternalBrowser(); 
   const router = useRouter();
 
   const formSchema = authFormSchema(type);
