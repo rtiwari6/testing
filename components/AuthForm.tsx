@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { provider, auth } from "@/firebase/client";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -16,9 +18,13 @@ import {
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import BrowserRedirectModal from "./BrowserRedirectModal";
 
 import { signIn, signUp } from "@/lib/actions/auth.action";
+import { useBrowserDetection } from "@/lib/hooks/useBrowserDetection";
 import FormField from "./FormField";
+
+type FormType = "sign-in" | "sign-up";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
@@ -30,6 +36,8 @@ const authFormSchema = (type: FormType) => {
 
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
+  const { isInAppBrowser, platform, hasChecked } = useBrowserDetection();
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
 
   const formSchema = authFormSchema(type);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,6 +89,13 @@ const AuthForm = ({ type }: { type: FormType }) => {
   };
 
   const handleGoogleLogin = async () => {
+    // If in an in-app browser, show the redirect modal
+    if (isInAppBrowser && (platform === 'ios' || platform === 'android')) {
+      setShowRedirectModal(true);
+      return;
+    }
+    
+    // Otherwise proceed with normal Google sign-in flow
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
@@ -88,15 +103,26 @@ const AuthForm = ({ type }: { type: FormType }) => {
       await signIn({ email: user.email!, idToken });
       toast.success("Signed in with Google");
       router.push("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Google sign-in failed");
+      
+      // Handle specific Google Sign-In errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error("Sign-in cancelled. Please try again.");
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error("Pop-up was blocked. Please allow pop-ups for this site.");
+        // Could also trigger the redirect modal here as a fallback
+        setShowRedirectModal(true);
+      } else {
+        toast.error("Google sign-in failed. Please try again or use email.");
+      }
     }
   };
 
   const isSignIn = type === "sign-in";
 
   return (
+    <>
       <div className="card-border lg:min-w-[566px]">
         <div className="flex flex-col gap-6 card py-14 px-10">
           {/* Logo & Title */}
@@ -110,27 +136,27 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 form">
               {!isSignIn && (
-                  <FormField
-                      control={form.control}
-                      name="name"
-                      label="Name"
-                      placeholder="Your name"
-                      type="text"
-                  />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  label="Name"
+                  placeholder="Your name"
+                  type="text"
+                />
               )}
               <FormField
-                  control={form.control}
-                  name="email"
-                  label="Email"
-                  placeholder="Email Address"
-                  type="email"
+                control={form.control}
+                name="email"
+                label="Email"
+                placeholder="Email Address"
+                type="email"
               />
               <FormField
-                  control={form.control}
-                  name="password"
-                  label="Password"
-                  placeholder="Password"
-                  type="password"
+                control={form.control}
+                name="password"
+                label="Password"
+                placeholder="Password"
+                type="password"
               />
               <Button className="btn w-full" type="submit">
                 {isSignIn ? "Sign In" : "Create Account"}
@@ -138,7 +164,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
             </form>
           </Form>
 
-          {/* Divider with “OR” */}
+          {/* Divider with "OR" */}
           <div className="flex items-center my-4">
             <hr className="flex-grow border-input/50" />
             <span className="mx-2 text-light-100">OR</span>
@@ -147,15 +173,15 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
           {/* Google Sign-In */}
           <Button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="btn-secondary w-full flex items-center justify-center gap-2"
+            type="button"
+            onClick={handleGoogleLogin}
+            className="btn-secondary w-full flex items-center justify-center gap-2"
           >
-            {/* Using public CDN for the “G” logo */}
+            {/* Using public CDN for the "G" logo */}
             <img
-                src="/google.svg"
-                alt="Google logo"
-                className="w-5 h-5"
+              src="/google.svg"
+              alt="Google logo"
+              className="w-5 h-5"
             />
             Continue with Google
           </Button>
@@ -164,14 +190,22 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <p className="text-center mt-4">
             {isSignIn ? "No account yet?" : "Have an account already?"}{" "}
             <Link
-                href={isSignIn ? "/sign-up" : "/sign-in"}
-                className="font-bold text-user-primary"
+              href={isSignIn ? "/sign-up" : "/sign-in"}
+              className="font-bold text-user-primary"
             >
               {isSignIn ? "Sign Up" : "Sign In"}
             </Link>
           </p>
         </div>
       </div>
+
+      {/* Browser Redirect Modal */}
+      <BrowserRedirectModal
+        isOpen={showRedirectModal}
+        platform={platform}
+        onClose={() => setShowRedirectModal(false)}
+      />
+    </>
   );
 };
 
