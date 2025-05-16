@@ -124,13 +124,7 @@ export const getExternalBrowserUrl = (): string => {
   }
 
   if (platform === "android") {
-    /* Android browser intent scheme */
-    const scheme =
-        protocol === "https:" ? "intent://" : "intent://";
-    const intentSuffix = `#Intent;scheme=${protocol.replace(":", "")};end`;
-
-    // Replace http:// or https:// with the intent scheme and add suffix
-    return scheme + href.replace(/^https?:\/\//, "") + intentSuffix;
+    return `intent:${href}#Intent;scheme=${protocol.replace(":", "")};end`;
   }
 
   // Desktop or anything else
