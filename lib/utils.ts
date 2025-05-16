@@ -45,17 +45,3 @@ export const getRandomInterviewCover = () => {
   const randomIndex = Math.floor(Math.random() * interviewCovers.length);
   return `/covers${interviewCovers[randomIndex]}`;
 };
-
-
-/**
- * Returns true when the UA looks like an embedded browser
- * (Instagram, Gmail, Messenger, etc.) that Google blocks.
- */
-export const isEmbedded = (): boolean => {
-  const ua =
-    (typeof navigator === 'undefined' ? '' : navigator.userAgent) ||
-    (typeof navigator === 'undefined' ? '' : navigator.vendor)  ||
-    '';
-  return /FBAN|FBAV|Instagram|Line|WebView|wv|MicroMessenger/i.test(ua);
-};
-
