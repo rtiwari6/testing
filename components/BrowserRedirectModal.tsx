@@ -51,19 +51,8 @@ const BrowserRedirectModal = ({
         }, 300);
       }, 300);
     } else if (platform === "android") {
-      // 1️⃣ Try to open in Chrome using intent scheme
-      const intentUrl = `intent://${window.location.host}${pathname}${search}${hash}#Intent;scheme=https;package=com.android.chrome;end`;
-      window.location.href = intentUrl;
-      
-      // 2️⃣ Fallback – try chrome directly if intent doesn't work
-      setTimeout(() => {
-        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
-        
-        // 3️⃣ Final fallback – let the system decide
-        setTimeout(() => {
-          window.open(currentUrl, "_system");
-        }, 300);
-      }, 300);
+      window.location.href = externalUrl;
+      setTimeout(() => window.open(currentUrl, "_system"), 300);
     } else {
       window.open(currentUrl, "_blank");
     }
