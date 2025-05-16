@@ -45,3 +45,17 @@ export const getRandomInterviewCover = () => {
   const randomIndex = Math.floor(Math.random() * interviewCovers.length);
   return `/covers${interviewCovers[randomIndex]}`;
 };
+
+export const isEmbedded = (): boolean => {
+  // guard for SSR
+  const ua =
+    (typeof navigator === "undefined" ? "" : navigator.userAgent) ||
+    (typeof navigator === "undefined" ? "" : navigator.vendor) ||
+    "";
+
+  // Common substrings for popular WebViews
+  const pattern =
+    /FBAN|FBAV|Instagram|Line|WebView|wv|Messenger|LinkedInApp|LinkedIn|TikTok/i;
+
+  return pattern.test(ua);
+};
